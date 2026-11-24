@@ -30,6 +30,11 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://ejemplo.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ejemplo_para_ci
           NEXT_PUBLIC_SITE_URL: http://localhost:3000
+          # Valores "canario": no son claves reales. El paso siguiente
+          # verifica que no hayan llegado al código del navegador.
+          SUPABASE_SECRET_KEY: sb_secret_canario_ci_no_es_real_7f3a
+          USDA_API_KEY: usda_canario_ci_no_es_real_9c1e
+      - run: scripts/check-client-bundle.sh sb_secret_canario_ci_no_es_real_7f3a usda_canario_ci_no_es_real_9c1e
 
   database:
     # Aplica las migraciones en un Postgres limpio y corre los tests de RLS.

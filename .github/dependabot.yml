@@ -1,6 +1,8 @@
 # Dependabot: PRs semanales con actualizaciones de dependencias.
 # Las alertas y los PRs de seguridad se activan en GitHub:
 # Settings > Code security > Dependabot alerts / Dependabot security updates.
+# Cada PR de Dependabot pasa por el mismo CI (lint, tipos, tests, npm audit,
+# build y tests de RLS): no se mergea nada que lo rompa.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -11,10 +13,22 @@ updates:
       timezone: America/Argentina/Buenos_Aires
     open-pull-requests-limit: 5
     groups:
+      # Los arreglos de seguridad llegan juntos en un PR propio, para
+      # poder mergearlos rápido sin esperar al resto.
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
       # Agrupa las actualizaciones menores para no llenar de PRs.
+      # Las "major" llegan sueltas: suelen traer cambios que hay que revisar.
       minor-and-patch:
+        applies-to: version-updates
         update-types: [minor, patch]
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
+      day: monday
+      timezone: America/Argentina/Buenos_Aires
+    groups:
+      actions:
+        patterns: ["*"]

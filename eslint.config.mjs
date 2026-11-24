@@ -5,6 +5,11 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  // Sin HTML crudo: dangerouslySetInnerHTML abre la puerta a XSS.
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: { "react/no-danger": "error" },
+  },
   // La clave secreta de Supabase solo puede usarse desde estos archivos.
   {
     files: ["src/**/*.{ts,tsx}"],
