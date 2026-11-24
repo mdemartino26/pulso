@@ -11,6 +11,9 @@ const serverEnvSchema = z.object({
   // Clave secreta de Supabase (la antigua service_role). Saltea RLS.
   // Se usa ÚNICAMENTE en src/server/supabase/admin.ts (Etapa 5 y 9).
   SUPABASE_SECRET_KEY: z.string().min(20),
+  // Opcionales: solo para apuntar a un servidor de prueba en tests.
+  USDA_API_BASE_URL: z.url().optional(),
+  OFF_API_BASE_URL: z.url().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -22,6 +25,8 @@ export function getServerEnv(): ServerEnv {
   const parsed = serverEnvSchema.safeParse({
     USDA_API_KEY: process.env.USDA_API_KEY,
     SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
+    USDA_API_BASE_URL: process.env.USDA_API_BASE_URL || undefined,
+    OFF_API_BASE_URL: process.env.OFF_API_BASE_URL || undefined,
   });
   if (!parsed.success) {
     const missing = parsed.error.issues.map((i) => i.path.join(".")).join(", ");
