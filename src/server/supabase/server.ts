@@ -2,6 +2,7 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { getPublicEnv } from "@/lib/env";
+import type { Database } from "@/server/db/database.types";
 import { sessionCookieOptions } from "./cookie-options";
 
 /**
@@ -11,11 +12,13 @@ import { sessionCookieOptions } from "./cookie-options";
  *
  * Se crea uno nuevo por request (nunca compartir entre usuarios).
  */
+export type ServerSupabaseClient = Awaited<ReturnType<typeof createSupabaseServerClient>>;
+
 export async function createSupabaseServerClient() {
   const env = getPublicEnv();
   const cookieStore = await cookies();
 
-  return createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
+  return createServerClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, {
     cookieOptions: sessionCookieOptions,
     cookies: {
       getAll() {
