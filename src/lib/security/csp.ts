@@ -10,39 +10,12 @@ export interface CspOptions {
   nonce: string;
   /** true en `next dev`: React necesita eval y estilos inline para depurar. */
   isDev: boolean;
-  /** URL del proyecto de Supabase (NEXT_PUBLIC_SUPABASE_URL). */
-  supabaseUrl?: string | undefined;
 }
 
 /** Imágenes de productos de Open Food Facts (se muestran directo, sin proxy). */
 const OPEN_FOOD_FACTS_IMAGES = "https://images.openfoodfacts.org";
 
-/**
- * Devuelve el origen (https://xxxx.supabase.co) de una URL, o null si
- * la URL no es válida o no es https (salvo localhost para Supabase local).
- */
-export function safeOrigin(url: string | undefined): URL | null {
-  if (!url) return null;
-  try {
-    const parsed = new URL(url);
-    const isLocal =
-      parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
-    if (parsed.protocol !== "https:" && !(isLocal && parsed.protocol === "http:")) {
-      return null;
-    }
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
-export function buildCsp({ nonce, isDev, supabaseUrl }: CspOptions): string {
-  const supabase = safeOrigin(supabaseUrl);
-  const supabaseHttp = supabase ? supabase.origin : null;
-  const supabaseWs = supabase
-    ? `${supabase.protocol === "https:" ? "wss:" : "ws:"}//${supabase.host}`
-    : null;
-
+export function buildCsp({ nonce, isDev }: CspOptions): string {
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
     // 'strict-dynamic': solo corren los scripts con nonce y los que esos
@@ -59,9 +32,10 @@ export function buildCsp({ nonce, isDev, supabaseUrl }: CspOptions): string {
     "style-src-attr": ["'unsafe-inline'"],
     "img-src": ["'self'", "blob:", "data:", OPEN_FOOD_FACTS_IMAGES],
     "font-src": ["'self'"],
-    // El navegador solo habla con nuestra app y con Supabase (auth + datos).
-    // USDA y Open Food Facts se consultan desde nuestros Route Handlers.
-    "connect-src": ["'self'", ...(supabaseHttp ? [supabaseHttp] : []), ...(supabaseWs ? [supabaseWs] : [])],
+    // El navegador solo habla con nuestra app. Supabase, USDA y Open Food
+    // Facts se consultan desde el servidor (las cookies de sesión son
+    // httpOnly, así que el navegador ni siquiera tiene los tokens).
+    "connect-src": ["'self'"],
     // Necesario para el service worker: con 'strict-dynamic', 'self' se
     // ignora en script-src, así que worker-src tiene que declararse aparte.
     "worker-src": ["'self'"],
