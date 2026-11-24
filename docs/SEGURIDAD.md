@@ -191,3 +191,21 @@ Registro de las decisiones de seguridad de Pulso y su porqué. Se suma una secci
 - Solo lectura: no hay escrituras nuevas. Todas las consultas pasan por RLS y además filtran por `user_id`.
 - El rango llega por URL y se acepta solo 7, 30 o 90 (cualquier otro valor vuelve a 7), así nadie puede pedir consultas enormes. Cada consulta tiene tope de filas.
 - Sin migraciones nuevas ni dominios nuevos en la CSP.
+
+## Etapa 9: exportar datos y borrar la cuenta
+
+**Exportar** (`/api/export`)
+- Usa la sesión de la persona (RLS): es imposible descargar datos de otra.
+- Formato y tabla se validan contra listas cerradas; el nombre del archivo lo arma el servidor (no hay inyección en headers).
+- Se exportan solo columnas útiles para la persona, sin ids de usuario ni datos internos.
+- **CSV sin fórmulas**: un valor que empieza con `=`, `+`, `-`, `@` o tabulación se guarda con un apóstrofo adelante. Sin esto, el nombre de un alimento que vino de Open Food Facts podría ejecutarse como fórmula al abrir el archivo en Excel ("CSV injection").
+- `Cache-Control: private, no-store`: ningún proxy ni CDN guarda la descarga.
+- Límite de 10 descargas por minuto (bucket `data_export`, migración `20261124200000_limite_exportar.sql`).
+- Las lecturas se piden por páginas de 1000 filas (el máximo de Supabase), así no se pierden datos.
+
+**Borrar la cuenta** (`/perfil/datos`)
+- Hay que escribir BORRAR: evita borrados por un toque accidental.
+- La acción vuelve a verificar la sesión contra Supabase (`getUser`) y toma el id de ahí, nunca del formulario.
+- Borrar un usuario de Auth requiere la clave secreta. Se usa solo en `src/server/account/delete-account.ts`, que es el segundo y último archivo que ESLint deja importar el cliente admin.
+- Todas las tablas tienen `on delete cascade` hacia `auth.users`: al borrar el usuario se borran todos sus datos en la misma operación.
+- Después se cierran las cookies de sesión y se muestra un aviso neutro en el login.

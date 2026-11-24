@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { safeNextPath } from "@/lib/auth/redirect";
 import { GoogleButton } from "@/features/auth/components/google-button";
 import { LoginForm } from "@/features/auth/components/login-form";
-import { LOGIN_URL_ERRORS } from "@/features/auth/messages";
+import { LOGIN_URL_ERRORS, LOGIN_URL_NOTICES } from "@/features/auth/messages";
 
 export const metadata: Metadata = { title: "Entrar" };
 
@@ -15,6 +15,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   // Solo códigos conocidos: nunca se muestra texto que venga en la URL.
   const errorKey = typeof params.error === "string" ? params.error : "";
   const urlError = Object.hasOwn(LOGIN_URL_ERRORS, errorKey) ? LOGIN_URL_ERRORS[errorKey] : undefined;
+  const noticeKey = typeof params.aviso === "string" ? params.aviso : "";
+  const notice = Object.hasOwn(LOGIN_URL_NOTICES, noticeKey) ? LOGIN_URL_NOTICES[noticeKey] : undefined;
 
   return (
     <Card>
@@ -23,6 +25,11 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         <CardDescription>Entrá para ver cómo viene tu día.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-6">
+        {notice ? (
+          <p role="status" className="bg-primary/10 rounded-md px-3 py-2 text-sm">
+            {notice}
+          </p>
+        ) : null}
         {urlError ? (
           <p role="alert" className="bg-destructive/10 text-destructive rounded-md px-3 py-2 text-sm">
             {urlError}

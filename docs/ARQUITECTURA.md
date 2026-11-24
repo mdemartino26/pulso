@@ -116,3 +116,8 @@ met_activities, exercises
 - La meta de cada día es la guardada en `daily_targets` ese día o la más cercana hacia atrás; si no hay ninguna, la actual.
 - "Cerca de la meta" = dentro de ±10 %. El peso usa la tendencia de 7 días, no el pesaje suelto.
 - Las frases del resumen describen y animan; nunca retan. Si la tendencia baja más rápido que el ritmo elegido, se sugiere comer un poco más.
+
+## Tus datos
+
+- **Exportar**: `src/server/services/export-service.ts` arma un JSON con todo o un CSV por tabla (`src/lib/export/csv.ts`). El repositorio (`export-repository.ts`) lee por páginas con `fetchAllPages` (`paged.ts`), que también usan las tendencias.
+- **Borrar la cuenta**: Server Action en `src/features/account/actions.ts` → `src/server/account/delete-account.ts` (clave secreta) → cascada en la base.

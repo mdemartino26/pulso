@@ -83,5 +83,5 @@ export interface FavoriteRepository {
 
 export interface RateLimiter {
   /** true si todavía hay cupo. */
-  consume(bucket: "food_search" | "food_barcode", max: number, windowSeconds: number): Promise<boolean>;
+  consume(bucket: "food_search" | "food_barcode" | "data_export", max: number, windowSeconds: number): Promise<boolean>;
 }

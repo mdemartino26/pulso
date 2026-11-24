@@ -11,7 +11,8 @@ import type { Database } from "@/server/db/database.types";
  * compartida entre usuarios. Si cada usuario pudiera escribirla, uno podría
  * "envenenarla" con datos falsos para todos. Por eso solo el servidor
  * escribe, después de validar lo que devolvió USDA / Open Food Facts.
- * (En la Etapa 9 se usa también para borrar la cuenta.)
+ * También se usa para borrar la cuenta (src/server/account/delete-account.ts):
+ * borrar un usuario de Auth requiere permisos de administrador.
  *
  * Reglas:
  * - "server-only": el build falla si un componente de cliente lo importa.
