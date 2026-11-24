@@ -1,16 +1,19 @@
 import Link from "next/link";
-import { UserRound } from "lucide-react";
+import { ChevronRight, UserRound, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { requireCompleteProfile } from "@/server/auth/profile-guard";
+import { foodDeps } from "@/server/services/food-deps";
+import { getDayLog } from "@/server/services/food-service";
 
 /**
  * Inicio provisorio: muestra las metas de hoy. En la Etapa 7 se reemplaza
  * por el panel del día.
  */
 export default async function HomePage() {
-  const { overview } = await requireCompleteProfile();
+  const { user, overview } = await requireCompleteProfile();
   const { targets } = overview;
+  const log = await getDayLog(await foodDeps(user.id), user.id, overview.today);
   const n = (v: number) => v.toLocaleString("es-AR");
 
   return (
@@ -65,8 +68,24 @@ export default async function HomePage() {
         </section>
       )}
 
+      <Link
+        href="/comidas"
+        className="bg-card hover:bg-accent/50 flex items-center gap-4 rounded-xl border p-4 shadow-xs"
+      >
+        <span className="bg-primary/10 text-primary grid size-10 place-items-center rounded-full">
+          <Utensils aria-hidden className="size-5" />
+        </span>
+        <span className="flex-1">
+          <span className="block font-medium">Comidas</span>
+          <span className="text-muted-foreground text-sm">
+            {log.totals.kcal > 0 ? `${n(Math.round(log.totals.kcal))} kcal registradas hoy` : "Todavía no registraste nada hoy"}
+          </span>
+        </span>
+        <ChevronRight aria-hidden className="text-muted-foreground size-5" />
+      </Link>
+
       <p className="text-muted-foreground text-sm">
-        Muy pronto vas a poder registrar comidas, actividad, agua y hábitos desde acá.
+        Muy pronto vas a poder registrar actividad, agua y hábitos desde acá.
       </p>
     </main>
   );

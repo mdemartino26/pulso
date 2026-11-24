@@ -124,3 +124,33 @@ Registro de las decisiones de seguridad de Pulso y su porqué. Se suma una secci
 
 **La UI no depende de Supabase**
 - Las páginas llaman a servicios (`profile-service.ts`) que reciben repositorios por parámetro. Los tests usan repositorios en memoria.
+
+## Etapa 5: registro de comidas
+
+**La API key de USDA nunca llega al navegador**
+- El navegador solo habla con nuestras rutas `/api/foods/search` y `/api/foods/barcode/[código]`. El servidor consulta USDA y Open Food Facts. La key viaja en el header `X-Api-Key` (no en la URL, así no queda en logs de proxies) y vive solo en `USDA_API_KEY`.
+- La CSP sigue con `connect-src 'self'`: aunque hubiera un script malicioso, no podría llamar a otros dominios.
+
+**Límite por usuario**
+- 30 búsquedas y 20 códigos por minuto por persona (`consume_rate_limit`, en la base, por usuario autenticado). Al pasarse, la API responde 429 con un mensaje amable.
+
+**Los datos externos no son confiables**
+- Todo lo que devuelven USDA y Open Food Facts pasa por Zod y por `src/server/food/providers/sanitize.ts`: se descartan productos sin calorías o con valores imposibles (por ejemplo, más de 900 kcal o más de 105 g de macros cada 100 g), se limpian caracteres de control, se recortan los textos y solo se aceptan imágenes `https://images.openfoodfacts.org`.
+- Las llamadas tienen timeout de 6 s, no siguen redirecciones, no mandan cookies y tienen tope de tamaño. Si un proveedor falla, se responde con la caché y se avisa.
+- Los textos externos se muestran como texto (React los escapa): un nombre como `<script>` se ve tal cual y no se ejecuta.
+
+**Caché compartida escrita solo por el servidor**
+- `foods_cache` y `food_search_cache` son compartidas entre usuarios. Si cualquiera pudiera escribirlas, podría "envenenarlas" con datos falsos. Por eso los usuarios solo pueden leer `foods_cache` y no tienen ningún acceso a `food_search_cache`.
+- Las escribe `src/server/repositories/food-cache-writer.ts` con la clave secreta (`src/server/supabase/admin.ts`). Una regla de ESLint impide importar el cliente con clave secreta desde cualquier otro archivo.
+
+**El cliente nunca manda calorías**
+- Para registrar una comida, el formulario manda solo la referencia del alimento, la cantidad y la unidad. El servidor busca los nutrientes en la base y guarda una copia ("snapshot") en `food_entries`. Así nadie puede inventar valores y las comidas viejas no cambian si después se actualiza el alimento.
+- Las calorías de cada entrada las calcula la base (columnas generadas).
+
+**Validación en el servidor**
+- Cantidades de 0,1 a 10.000 y porción total de hasta 5 kg / 5 L; fechas de hoy hasta un año atrás (nada en el futuro); ids con formato UUID; códigos de barras de 8, 12, 13 o 14 dígitos (así no pueden alterar la URL del proveedor).
+- Los alimentos propios usan los mismos límites que la base. Un campo vacío es un error, no un 0.
+- La búsqueda en la base escapa los comodines de `LIKE` y todo pasa por el query builder (nada de SQL armado con texto).
+
+**Cámara**
+- `Permissions-Policy: camera=(self)`. La cámara se enciende solo con el escáner abierto y se apaga al cerrarlo. El video se lee en el navegador y no se sube a ningún lado. Si no hay cámara o no hay permiso, se puede escribir el código.

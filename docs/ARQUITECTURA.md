@@ -52,3 +52,23 @@ Funciones puras, sin fecha "de hoy" implícita, testeadas con Vitest.
 - **Proteína**: 1,6–2,2 g/kg en déficit.
 - **Agua**: 35 ml × kg, +500 ml los días con ejercicio, mínimo 2 L (editable).
 - Las metas de cada día se guardan en `daily_targets`: si cambiás el peso, los días anteriores no cambian.
+
+## Comidas
+
+```
+Navegador ──► /api/foods/search, /api/foods/barcode/[código]   (Route Handlers, con sesión)
+          ──► Server Actions de src/features/food/actions.ts   (registrar, editar, borrar)
+                 │
+                 ▼
+      src/server/services/food-service.ts   (lógica; no conoce Supabase ni las APIs)
+         │                 │                          │
+         ▼                 ▼                          ▼
+   FoodProvider      repositorios (RLS)      FoodCacheWriter (clave secreta)
+   USDA / OFF        food_entries, custom_foods,   foods_cache,
+                     favorite_foods, rate limit    food_search_cache
+```
+
+- **Proveedores** (`src/server/food/providers`): implementan `FoodProvider` (`search`, `byBarcode`). Sumar otra base es escribir otro proveedor.
+- **Caché**: búsquedas 7 días, productos 30 días. Si un proveedor no responde, se busca en la caché.
+- **Unidades**: gramos o mililitros (según el alimento) y "porciones" cuando el producto declara una. Cada entrada guarda `base_per_unit` (cuántos g/ml vale 1 unidad) y los nutrientes cada 100: la base calcula el resto.
+- **Rápido de cargar**: recientes, favoritos, mis alimentos, código de barras y "copiar lo del día anterior".
