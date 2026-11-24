@@ -24,7 +24,11 @@ let warnedNoUsda = false;
 function buildProviders(): FoodProvider[] {
   const env = getServerEnv();
   const providers: FoodProvider[] = [
-    createOpenFoodFactsProvider({ userAgent: USER_AGENT, baseUrl: env.OFF_API_BASE_URL }),
+    createOpenFoodFactsProvider({
+      userAgent: USER_AGENT,
+      baseUrl: env.OFF_API_BASE_URL,
+      searchBaseUrl: env.OFF_SEARCH_BASE_URL,
+    }),
   ];
   if (env.USDA_API_KEY) {
     providers.push(createUsdaProvider({ apiKey: env.USDA_API_KEY, baseUrl: env.USDA_API_BASE_URL }));

@@ -98,10 +98,9 @@ export interface UsdaOptions {
 export function createUsdaProvider({ apiKey, fetchFn = fetch, baseUrl = "https://api.nal.usda.gov/fdc/v1" }: UsdaOptions): FoodProvider {
   const headers = { "X-Api-Key": apiKey, Accept: "application/json" };
 
-  async function search(query: string, dataTypes: string, pageSize: number): Promise<ProviderFood[]> {
+  async function search(query: string, pageSize: number): Promise<ProviderFood[]> {
     const url = new URL(`${baseUrl}/foods/search`);
     url.searchParams.set("query", query);
-    url.searchParams.set("dataType", dataTypes);
     url.searchParams.set("pageSize", String(pageSize));
     const json = await fetchJson(fetchFn, "usda", url.toString(), { headers });
     if (json === null) return [];
@@ -112,9 +111,9 @@ export function createUsdaProvider({ apiKey, fetchFn = fetch, baseUrl = "https:/
 
   return {
     source: "usda",
-    search: (query) => search(query, "Foundation,SR Legacy,Branded", 25),
+    search: (query) => search(query, 25),
     async byBarcode(barcode) {
-      const foods = await search(barcode, "Branded", 5);
+      const foods = await search(barcode, 5);
       return foods.find((f) => f.barcode === barcode.replace(/^0+(?=\d{8,14}$)/, "")) ?? null;
     },
   };

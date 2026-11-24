@@ -15,6 +15,7 @@ const serverEnvSchema = z.object({
   // Opcionales: solo para apuntar a un servidor de prueba en tests.
   USDA_API_BASE_URL: z.url().optional(),
   OFF_API_BASE_URL: z.url().optional(),
+  OFF_SEARCH_BASE_URL: z.url().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -28,6 +29,7 @@ export function getServerEnv(): ServerEnv {
     SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
     USDA_API_BASE_URL: process.env.USDA_API_BASE_URL || undefined,
     OFF_API_BASE_URL: process.env.OFF_API_BASE_URL || undefined,
+    OFF_SEARCH_BASE_URL: process.env.OFF_SEARCH_BASE_URL || undefined,
   });
   if (!parsed.success) {
     const missing = parsed.error.issues.map((i) => i.path.join(".")).join(", ");

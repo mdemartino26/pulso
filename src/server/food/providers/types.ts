@@ -32,6 +32,7 @@ export async function fetchJson(
   provider: string,
   url: string,
   init: RequestInit = {},
+  timeoutMs = PROVIDER_TIMEOUT_MS,
 ): Promise<unknown | null> {
   let res: Response;
   try {
@@ -41,7 +42,7 @@ export async function fetchJson(
       redirect: "error",
       credentials: "omit",
       cache: "no-store",
-      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (e) {
     const timeout = e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError");

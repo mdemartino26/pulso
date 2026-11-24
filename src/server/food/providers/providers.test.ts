@@ -126,6 +126,19 @@ describe("Open Food Facts", () => {
     expect((init?.headers as Record<string, string>)["User-Agent"]).toBe("Pulso/test");
     expect(init?.redirect).toBe("error");
   });
+  it("usa el buscador nuevo (marcas como lista) y, si falla, el clásico", async () => {
+    const hit = { ...offAlfajor, brands: ["Marca X", "Otra"] };
+    const ok1 = createOpenFoodFactsProvider({ userAgent: "x", fetchFn: () => json({ hits: [hit], count: 1 }) });
+    expect((await ok1.search("alfajor"))[0]?.brand).toBe("Marca X");
+
+    const fetchFn = vi.fn<FetchLike>((url) =>
+      url.includes("search.openfoodfacts.org") ? json({ error: "busy" }, 503) : json({ products: [offAlfajor] }),
+    );
+    const p = createOpenFoodFactsProvider({ userAgent: "x", fetchFn });
+    expect(await p.search("alfajor")).toHaveLength(1);
+    expect(fetchFn.mock.calls.map(([u]) => new URL(u).host)).toEqual(["search.openfoodfacts.org", "world.openfoodfacts.org"]);
+  });
+
   it("timeout → ProviderError", async () => {
     const err = Object.assign(new Error("t"), { name: "TimeoutError" });
     const p = createOpenFoodFactsProvider({ userAgent: "x", fetchFn: () => Promise.reject(err) });

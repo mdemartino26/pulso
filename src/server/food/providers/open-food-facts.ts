@@ -25,11 +25,12 @@ const FIELDS = [
 ].join(",");
 
 const productSchema = z.object({
-  code: z.string(),
+  code: z.preprocess((v) => (typeof v === "number" ? String(v) : v), z.string()),
   product_name: z.string().optional(),
   product_name_es: z.string().optional(),
   generic_name_es: z.string().optional(),
-  brands: z.string().optional(),
+  // La búsqueda nueva devuelve las marcas como lista; la vieja, como texto.
+  brands: z.union([z.string(), z.array(z.string())]).optional(),
   nutriments: z.record(z.string(), z.unknown()).optional(),
   serving_size: z.string().optional(),
   serving_quantity: z.unknown().optional(),
@@ -39,7 +40,8 @@ const productSchema = z.object({
 });
 
 const productResponseSchema = z.object({ status: z.number().optional(), product: z.unknown().optional() });
-const searchResponseSchema = z.object({ products: z.array(z.unknown()).max(200).default([]) });
+const legacySearchSchema = z.object({ products: z.array(z.unknown()).max(200).default([]) });
+const searchaliciousSchema = z.object({ hits: z.array(z.unknown()).max(200).default([]) });
 
 export function parseOffProduct(raw: unknown): ProviderFood | null {
   const parsed = productSchema.safeParse(raw);
@@ -61,7 +63,7 @@ export function parseOffProduct(raw: unknown): ProviderFood | null {
   });
   const qtyUnit = (p.product_quantity_unit ?? p.serving_quantity_unit ?? "").toLowerCase();
   const basis = qtyUnit === "ml" || qtyUnit === "cl" || qtyUnit === "l" ? "ml" : "g";
-  const brand = p.brands?.split(",")[0];
+  const brand = Array.isArray(p.brands) ? p.brands[0] : p.brands?.split(",")[0];
   return buildFood({
     source: "off",
     sourceId: p.code,
@@ -79,27 +81,48 @@ export interface OffOptions {
   userAgent: string;
   fetchFn?: FetchLike;
   baseUrl?: string;
+  searchBaseUrl?: string;
 }
+
+/** Las búsquedas de texto de Open Food Facts pueden tardar bastante. */
+const SEARCH_TIMEOUT_MS = 10_000;
 
 export function createOpenFoodFactsProvider({
   userAgent,
   fetchFn = fetch,
   baseUrl = "https://world.openfoodfacts.org",
+  searchBaseUrl = "https://search.openfoodfacts.org",
 }: OffOptions): FoodProvider {
   const headers = { "User-Agent": userAgent, Accept: "application/json" };
   return {
     source: "off",
     async search(query) {
+      // 1) Buscador nuevo (search.openfoodfacts.org): rápido y pensado para esto.
+      // 2) Si falla, la búsqueda clásica (más lenta).
+      try {
+        const url = new URL(`${searchBaseUrl}/search`);
+        url.searchParams.set("q", query);
+        url.searchParams.set("page_size", "25");
+        url.searchParams.set("langs", "es,en");
+        url.searchParams.set("fields", FIELDS);
+        const json = await fetchJson(fetchFn, "off", url.toString(), { headers }, SEARCH_TIMEOUT_MS);
+        const parsed = searchaliciousSchema.safeParse(json ?? {});
+        if (!parsed.success) throw new ProviderError("off", "invalid_response");
+        return parsed.data.hits.map(parseOffProduct).filter((f): f is ProviderFood => f !== null);
+      } catch (e) {
+        if (!(e instanceof ProviderError)) throw e;
+        console.warn("[food] off (buscador nuevo) falló, probamos el clásico", { code: e.code, status: e.status });
+      }
       const url = new URL(`${baseUrl}/cgi/search.pl`);
       url.searchParams.set("search_terms", query);
       url.searchParams.set("search_simple", "1");
+      url.searchParams.set("action", "process");
       url.searchParams.set("json", "1");
       url.searchParams.set("page_size", "25");
-      url.searchParams.set("lc", "es");
       url.searchParams.set("fields", FIELDS);
-      const json = await fetchJson(fetchFn, "off", url.toString(), { headers });
+      const json = await fetchJson(fetchFn, "off", url.toString(), { headers }, SEARCH_TIMEOUT_MS);
       if (json === null) return [];
-      const parsed = searchResponseSchema.safeParse(json);
+      const parsed = legacySearchSchema.safeParse(json);
       if (!parsed.success) throw new ProviderError("off", "invalid_response");
       return parsed.data.products.map(parseOffProduct).filter((f): f is ProviderFood => f !== null);
     },
