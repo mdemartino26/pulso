@@ -209,3 +209,21 @@ Registro de las decisiones de seguridad de Pulso y su porqué. Se suma una secci
 - Borrar un usuario de Auth requiere la clave secreta. Se usa solo en `src/server/account/delete-account.ts`, que es el segundo y último archivo que ESLint deja importar el cliente admin.
 - Todas las tablas tienen `on delete cascade` hacia `auth.users`: al borrar el usuario se borran todos sus datos en la misma operación.
 - Después se cierran las cookies de sesión y se muestra un aviso neutro en el login.
+
+## Etapa 10: deploy y revisión final
+
+**Ningún secreto en el código del navegador** (`scripts/check-client-bundle.sh`)
+- El CI hace el build con valores "canario" en `SUPABASE_SECRET_KEY` y `USDA_API_KEY` y falla si alguno aparece en `.next/static`. Es una segunda barrera además de `server-only`: detecta el error aunque llegue por un camino que `server-only` no cubre.
+
+**Sin HTML crudo**
+- ESLint marca como error cualquier `dangerouslySetInnerHTML` (`react/no-danger`).
+
+**Dependabot**
+- npm y GitHub Actions, todos los lunes. Los arreglos de seguridad llegan en un PR propio para mergearlos rápido; las actualizaciones menores, agrupadas; las *major*, sueltas para revisarlas. Todos pasan por el mismo CI.
+
+**Deploy** (`docs/DEPLOY.md`)
+- Las claves secretas van solo al entorno *Production* de Vercel y marcadas como *Sensitive*: los previews de los PRs no tienen acceso a la base real.
+- *Redirect URLs* exactas en Supabase, sin comodines: un comodín permitiría mandar la sesión a otra dirección.
+- `preload` de HSTS queda para cuando el dominio sea definitivo: salir de la lista tarda meses.
+
+El repaso completo de los requisitos está en [`CHECKLIST_SEGURIDAD.md`](./CHECKLIST_SEGURIDAD.md).
