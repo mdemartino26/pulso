@@ -13,3 +13,4 @@ export * from "./nutrition";
 export * from "./trend";
 export * from "./activity";
 export * from "./types";
+export * from "./habits";

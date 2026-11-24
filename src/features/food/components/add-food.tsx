@@ -194,7 +194,7 @@ export function AddFood({ date, meal, recent, favorites, mine, preselected }: Ad
 function FoodList({ foods, onPick, empty }: { foods: FoodView[]; onPick: (f: FoodView) => void; empty: string }) {
   if (foods.length === 0) return <p className="text-muted-foreground px-1 py-4 text-sm">{empty}</p>;
   return (
-    <ul className="bg-card divide-y rounded-xl border">
+    <ul className="bg-card divide-y overflow-hidden rounded-3xl border backdrop-blur-xl">
       {foods.map((f) => (
         <li key={`${f.ref.source}:${f.ref.id}`}>
           <button

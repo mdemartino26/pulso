@@ -10,25 +10,41 @@
  * "te pasaste de calorías".
  */
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.982 0.006 160);
-  --foreground: oklch(0.22 0.02 165);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 165);
+  --radius: 1rem;
+  --background: oklch(0.972 0.006 250);
+  --foreground: oklch(0.21 0.015 255);
+  /* Paneles tipo vidrio: semitransparentes sobre el fondo con degradé. */
+  --card: oklch(1 0 0 / 78%);
+  --card-foreground: oklch(0.21 0.015 255);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 165);
-  --primary: oklch(0.52 0.1 160);
+  --popover-foreground: oklch(0.21 0.015 255);
+  --primary: oklch(0.5 0.1 160);
   --primary-foreground: oklch(0.985 0.005 160);
-  --secondary: oklch(0.95 0.015 160);
-  --secondary-foreground: oklch(0.28 0.03 165);
-  --muted: oklch(0.95 0.01 160);
-  --muted-foreground: oklch(0.5 0.02 165);
-  --accent: oklch(0.94 0.025 160);
-  --accent-foreground: oklch(0.28 0.03 165);
+  --secondary: oklch(0.94 0.008 250);
+  --secondary-foreground: oklch(0.26 0.02 255);
+  --muted: oklch(0.93 0.008 250 / 80%);
+  --muted-foreground: oklch(0.48 0.015 255);
+  --accent: oklch(0.92 0.012 250 / 80%);
+  --accent-foreground: oklch(0.26 0.02 255);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0.01 160);
-  --input: oklch(0.9 0.01 160);
+  --border: oklch(0.2 0.02 255 / 9%);
+  --input: oklch(0.2 0.02 255 / 14%);
   --ring: oklch(0.6 0.08 160);
+  --shell: oklch(1 0 0 / 55%);
+  --glow-1: oklch(0.9 0.06 160 / 55%);
+  --glow-2: oklch(0.9 0.06 290 / 45%);
+  /*
+   * Tarjetas pastel del panel. Siempre con texto oscuro (--tile-ink) para
+   * buen contraste en los dos temas. Ningún color es "malo": no hay rojo.
+   */
+  --tile-ink: oklch(0.2 0.02 255);
+  --tile-ink-soft: oklch(0.2 0.02 255 / 68%);
+  --tile-sun: oklch(0.9 0.13 95);
+  --tile-peach: oklch(0.8 0.12 55);
+  --tile-lilac: oklch(0.8 0.1 300);
+  --tile-lime: oklch(0.88 0.15 130);
+  --tile-sky: oklch(0.84 0.09 225);
+  --tile-rose: oklch(0.86 0.07 350);
   /* Series de gráficos (Recharts). */
   --chart-1: oklch(0.55 0.1 160);
   --chart-2: oklch(0.6 0.12 230);
@@ -38,25 +54,34 @@
 }
 
 .dark {
-  --background: oklch(0.17 0.01 165);
-  --foreground: oklch(0.95 0.01 160);
-  --card: oklch(0.21 0.012 165);
-  --card-foreground: oklch(0.95 0.01 160);
-  --popover: oklch(0.21 0.012 165);
-  --popover-foreground: oklch(0.95 0.01 160);
-  --primary: oklch(0.7 0.11 160);
+  --background: oklch(0.17 0.008 255);
+  --foreground: oklch(0.96 0.005 250);
+  --card: oklch(1 0 0 / 7%);
+  --card-foreground: oklch(0.96 0.005 250);
+  --popover: oklch(0.24 0.01 255);
+  --popover-foreground: oklch(0.96 0.005 250);
+  --primary: oklch(0.78 0.11 160);
   --primary-foreground: oklch(0.18 0.02 165);
-  --secondary: oklch(0.27 0.015 165);
-  --secondary-foreground: oklch(0.95 0.01 160);
-  --muted: oklch(0.27 0.015 165);
-  --muted-foreground: oklch(0.7 0.015 160);
-  --accent: oklch(0.29 0.02 165);
-  --accent-foreground: oklch(0.95 0.01 160);
+  --secondary: oklch(1 0 0 / 10%);
+  --secondary-foreground: oklch(0.96 0.005 250);
+  --muted: oklch(1 0 0 / 8%);
+  --muted-foreground: oklch(0.72 0.01 250);
+  --accent: oklch(1 0 0 / 12%);
+  --accent-foreground: oklch(0.96 0.005 250);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.55 0.08 160);
-  --chart-1: oklch(0.7 0.11 160);
+  --border: oklch(1 0 0 / 11%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.6 0.08 160);
+  --shell: oklch(0.22 0.01 255 / 60%);
+  --glow-1: oklch(0.42 0.06 200 / 40%);
+  --glow-2: oklch(0.38 0.07 290 / 35%);
+  --tile-sun: oklch(0.88 0.13 95);
+  --tile-peach: oklch(0.78 0.12 55);
+  --tile-lilac: oklch(0.78 0.1 300);
+  --tile-lime: oklch(0.86 0.15 130);
+  --tile-sky: oklch(0.82 0.09 225);
+  --tile-rose: oklch(0.84 0.07 350);
+  --chart-1: oklch(0.78 0.11 160);
   --chart-2: oklch(0.7 0.12 230);
   --chart-3: oklch(0.78 0.13 75);
   --chart-4: oklch(0.7 0.12 300);
@@ -93,6 +118,15 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-shell: var(--shell);
+  --color-tile-ink: var(--tile-ink);
+  --color-tile-ink-soft: var(--tile-ink-soft);
+  --color-tile-sun: var(--tile-sun);
+  --color-tile-peach: var(--tile-peach);
+  --color-tile-lilac: var(--tile-lilac);
+  --color-tile-lime: var(--tile-lime);
+  --color-tile-sky: var(--tile-sky);
+  --color-tile-rose: var(--tile-rose);
 }
 
 @layer base {
@@ -101,6 +135,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Fondo con dos luces suaves: le da profundidad al efecto vidrio. */
+    background-image:
+      radial-gradient(60rem 40rem at 10% -10%, var(--glow-1), transparent 60%),
+      radial-gradient(50rem 40rem at 110% 10%, var(--glow-2), transparent 60%);
+    background-attachment: fixed;
     /* Evita el zoom de iOS al tocar inputs y el "rebote" en la PWA. */
     -webkit-text-size-adjust: 100%;
     overscroll-behavior-y: none;

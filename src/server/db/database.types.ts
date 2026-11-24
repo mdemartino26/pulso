@@ -309,6 +309,46 @@ export interface Database {
         Update: { steps?: number };
         Relationships: [];
       };
+      water_entries: {
+        Row: { id: string; user_id: string; date: string; amount_ml: number; created_at: string };
+        Insert: { user_id?: string; date: string; amount_ml: number };
+        Update: { [_ in never]: never };
+        Relationships: [];
+      };
+      wellbeing_entries: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          sleep_hours: number | string | null;
+          mood: number | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: { user_id?: string; date: string; sleep_hours?: number | null; mood?: number | null };
+        Update: { sleep_hours?: number | null; mood?: number | null };
+        Relationships: [];
+      };
+      habits: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          sort_order: number;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: { user_id?: string; name: string; sort_order?: number };
+        Update: { name?: string; sort_order?: number; archived_at?: string | null };
+        Relationships: [];
+      };
+      habit_checks: {
+        Row: { habit_id: string; user_id: string; date: string; created_at: string };
+        Insert: { habit_id: string; user_id?: string; date: string };
+        Update: { [_ in never]: never };
+        Relationships: [];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {

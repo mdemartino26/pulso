@@ -13,20 +13,20 @@ export function DaySummary({ totals, targets }: { totals: Nutrients; targets: Da
   const diff = target ? Math.round(target - totals.kcal) : null;
 
   return (
-    <section aria-label="Resumen del día" className="bg-card grid gap-4 rounded-xl border p-5 shadow-xs">
+    <section aria-label="Resumen del día" className="bg-tile-sun text-tile-ink grid gap-4 rounded-[1.75rem] p-5 shadow-sm">
       <div className="flex items-end justify-between gap-2">
         <div>
-          <p className="text-muted-foreground text-sm">Consumido</p>
-          <p className="text-3xl font-semibold tracking-tight">
+          <p className="text-xs font-bold tracking-wider uppercase">Consumido</p>
+          <p className="text-4xl font-semibold tracking-tight tabular-nums">
             {n(totals.kcal)}
-            {target ? <span className="text-muted-foreground text-base font-normal"> / {n(target)} kcal</span> : " kcal"}
+            {target ? <span className="text-tile-ink-soft text-base font-normal"> / {n(target)} kcal</span> : " kcal"}
           </p>
         </div>
         {diff !== null ? (
-          <p className="text-muted-foreground text-right text-sm">
+          <p className="text-tile-ink-soft text-right text-sm">
             {diff >= 0 ? (
               <>
-                Te quedan <span className="text-foreground font-medium">{n(diff)} kcal</span>
+                Te quedan <span className="font-semibold">{n(diff)} kcal</span>
               </>
             ) : (
               <>{n(-diff)} kcal por encima de la meta. Mañana seguimos.</>
@@ -41,25 +41,25 @@ export function DaySummary({ totals, targets }: { totals: Nutrients; targets: Da
           aria-valuemin={0}
           aria-valuemax={target}
           aria-valuenow={Math.round(totals.kcal)}
-          className="bg-muted h-2 overflow-hidden rounded-full"
+          className="h-2.5 overflow-hidden rounded-full bg-white/50"
         >
-          <div className="bg-primary h-full rounded-full transition-[width]" style={{ width: `${pct}%` }} />
+          <div className="bg-tile-ink h-full rounded-full transition-[width]" style={{ width: `${pct}%` }} />
         </div>
       ) : null}
       <dl className="grid grid-cols-3 gap-2 text-xs">
         <div>
-          <dt className="text-muted-foreground">Proteína</dt>
+          <dt className="text-tile-ink-soft">Proteína</dt>
           <dd className="text-sm font-medium">
             {n(totals.protein)} g
-            {targets ? <span className="text-muted-foreground font-normal"> / {targets.proteinMinG}–{targets.proteinMaxG}</span> : null}
+            {targets ? <span className="text-tile-ink-soft font-normal"> / {targets.proteinMinG}–{targets.proteinMaxG}</span> : null}
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Carbohidratos</dt>
+          <dt className="text-tile-ink-soft">Carbohidratos</dt>
           <dd className="text-sm font-medium">{n(totals.carbs)} g</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Grasas</dt>
+          <dt className="text-tile-ink-soft">Grasas</dt>
           <dd className="text-sm font-medium">{n(totals.fat)} g</dd>
         </div>
       </dl>

@@ -342,7 +342,7 @@ function usePreview(values: ProfileFormValues, today: IsoDate) {
 function TargetsPreview({ targets }: { targets: NonNullable<ReturnType<typeof usePreview>["targets"]> }) {
   const n = (v: number) => v.toLocaleString("es-AR");
   return (
-    <section aria-label="Tus metas estimadas" className="bg-card grid gap-3 rounded-xl border p-4">
+    <section aria-label="Tus metas estimadas" className="bg-card grid gap-3 rounded-3xl border backdrop-blur-xl p-4">
       <p className="text-muted-foreground text-sm">Tu meta para un día sin ejercicio</p>
       <p className="text-3xl font-semibold tracking-tight">
         {n(targets.kcalTarget)} <span className="text-muted-foreground text-base font-normal">kcal</span>

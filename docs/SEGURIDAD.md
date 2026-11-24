@@ -169,3 +169,19 @@ Registro de las decisiones de seguridad de Pulso y su porqué. Se suma una secci
 **Series siempre de la misma persona**
 - `strength_sets` referencia a `(activity_entries.id, user_id)`: aunque alguien adivine el id de una actividad ajena, la base no le deja colgarle series. Además RLS filtra por `user_id = auth.uid()`.
 - Si una actividad ajena se pide por URL, la respuesta es 404 (no se distingue de "no existe").
+
+## Etapa 7: panel del día, agua, peso, sueño, ánimo y hábitos
+
+**Validación en el servidor**
+- Agua de 50 a 3000 ml por toque; peso de 30 a 300 kg; sueño de 0 a 24 h (se redondea a media hora); ánimo de 1 a 5; nombres de hábitos de 1 a 60 caracteres, sin caracteres de control. Fechas de hoy hasta un año atrás. Máximo 20 hábitos activos.
+- Marcar un hábito verifica que sea un hábito activo de la persona. Además `habit_checks` referencia a `(habits.id, user_id)`, así que la base impide marcar hábitos ajenos aunque alguien adivine el id.
+
+**Sin migraciones nuevas**
+- `water_entries`, `wellbeing_entries`, `habits` y `habit_checks` ya tenían RLS (`user_id = auth.uid()`) y permisos desde la Etapa 2.
+
+**Datos mínimos**
+- Sueño y ánimo son opcionales y se guardan como número; no hay notas de texto libre (menos datos sensibles para proteger).
+- Archivar un hábito no lo borra: conserva el historial. Los datos se borran todos al eliminar la cuenta (Etapa 9).
+
+**Sin estilos ni scripts externos**
+- El nuevo diseño usa solo Tailwind y variables CSS propias: no se sumó ningún dominio a la CSP.
