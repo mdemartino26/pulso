@@ -106,3 +106,13 @@ met_activities, exercises
 - **Agua**: cada toque es una fila; deshacer borra la última. La meta viene de las metas del día (35 ml × kg, +500 ml con ejercicio, mínimo 2 L o la que elijas en el perfil).
 - **Peso**: guardar o borrar un peso recalcula las metas de ese día y las de hoy (basal, calorías, proteína y agua). El gráfico muestra cada pesaje y la tendencia (promedio de 7 días). No se puede borrar el único peso.
 - **Hábitos**: en vez de rachas que se rompen, se muestra "X de los últimos 7 días" (`habitWindow` en `src/lib/calc/habits.ts`).
+
+## Tendencias
+
+`/tendencias?dias=7|30|90` (`src/server/services/trends-service.ts`, repositorio `trends-repositories.ts`).
+
+- Lee solo las columnas necesarias de cada tabla para el rango, con tope de filas, y arma una serie por día (7 y 30) o por semana (90, con semanas que terminan hoy).
+- **Los días sin registros no cuentan como cero**: el promedio de calorías usa solo los días con comidas, el de agua solo los días con agua, etc.
+- La meta de cada día es la guardada en `daily_targets` ese día o la más cercana hacia atrás; si no hay ninguna, la actual.
+- "Cerca de la meta" = dentro de ±10 %. El peso usa la tendencia de 7 días, no el pesaje suelto.
+- Las frases del resumen describen y animan; nunca retan. Si la tendencia baja más rápido que el ritmo elegido, se sugiere comer un poco más.

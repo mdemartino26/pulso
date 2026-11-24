@@ -185,3 +185,9 @@ Registro de las decisiones de seguridad de Pulso y su porqué. Se suma una secci
 
 **Sin estilos ni scripts externos**
 - El nuevo diseño usa solo Tailwind y variables CSS propias: no se sumó ningún dominio a la CSP.
+
+## Etapa 8: tendencias
+
+- Solo lectura: no hay escrituras nuevas. Todas las consultas pasan por RLS y además filtran por `user_id`.
+- El rango llega por URL y se acepta solo 7, 30 o 90 (cualquier otro valor vuelve a 7), así nadie puede pedir consultas enormes. Cada consulta tiene tope de filas.
+- Sin migraciones nuevas ni dominios nuevos en la CSP.
