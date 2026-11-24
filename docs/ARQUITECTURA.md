@@ -92,3 +92,17 @@ met_activities, exercises
 - **Pasos dentro de una caminata o carrera**: se estiman por cadencia (caminar 90, 105 o 120 pasos por minuto según intensidad; correr, unos 160) y se descuentan de los pasos del día. Así 30 minutos de caminata no se cuentan dos veces.
 - **Meta del día**: el servicio de perfil recibe `activityLog`, que trae el ejercicio y los pasos de esa fecha. La meta de hoy en el inicio y las metas guardadas en `daily_targets` ya incluyen la actividad.
 - **Fuerza**: cada serie guarda ejercicio, repeticiones y peso. El historial agrupa por sesión y muestra la mejor serie, el volumen (reps × kg) y el 1RM estimado con Epley, que sirve para comparar sesiones, no como récord real.
+
+## Panel del día y diseño
+
+- **Marco** (`src/components/shell`): en compu y tablet hay barra lateral; en el celular, barra de abajo con 5 secciones al alcance del pulgar. Las pantallas privadas viven en `src/app/(app)` (el grupo no cambia las URLs) y comparten ese marco.
+- **Tarjetas** (`src/components/tile.tsx`): colores pastel con texto oscuro en los dos temas, título en mayúsculas, número grande y detalle chico. Ningún color significa "mal": no hay rojos.
+- **Panel** (`/`): calorías y proteína, actividad, agua (+250 / +500 / deshacer), peso (tendencia de 7 días), sueño y ánimo, y hábitos para marcar con un toque.
+
+## Agua, peso, sueño, ánimo y hábitos
+
+`src/server/services/tracking-service.ts`, con repositorios en `tracking-repositories.ts`.
+
+- **Agua**: cada toque es una fila; deshacer borra la última. La meta viene de las metas del día (35 ml × kg, +500 ml con ejercicio, mínimo 2 L o la que elijas en el perfil).
+- **Peso**: guardar o borrar un peso recalcula las metas de ese día y las de hoy (basal, calorías, proteína y agua). El gráfico muestra cada pesaje y la tendencia (promedio de 7 días). No se puede borrar el único peso.
+- **Hábitos**: en vez de rachas que se rompen, se muestra "X de los últimos 7 días" (`habitWindow` en `src/lib/calc/habits.ts`).
