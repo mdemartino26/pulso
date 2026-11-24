@@ -9,7 +9,6 @@ import {
   type FoodView,
   type Meal,
   type Nutrients,
-  type ProviderFood,
 } from "@/lib/food";
 import {
   addEntrySchema,
@@ -79,12 +78,18 @@ const ok = <T>(value: T): Result<T> => ({ ok: true, value });
 const fail = (code: ServiceError, fieldErrors?: Record<string, string[] | undefined>): Result<never> =>
   fieldErrors ? { ok: false, code, fieldErrors } : { ok: false, code };
 
-function logProviderError(e: unknown) {
+/**
+ * Un proveedor (o la caché) que falla no tumba la búsqueda: se registra y
+ * se sigue con lo demás. Se loguea solo el tipo de error y su código.
+ */
+function logSourceError(where: string, e: unknown) {
   if (e instanceof ProviderError) {
     console.warn(`[food] ${e.provider} falló`, { code: e.code, status: e.status });
-    return;
+  } else {
+    // Errores de configuración (p. ej., falta SUPABASE_SECRET_KEY) o de la
+    // base: el mensaje es nuestro y no contiene datos de la persona.
+    console.error(`[food] ${where} falló:`, e instanceof Error ? `${e.name}: ${e.message}` : "desconocido");
   }
-  throw e;
 }
 
 // --- Vistas ------------------------------------------------------------------
@@ -171,13 +176,22 @@ export async function searchFoods(deps: FoodDeps, userId: string, rawQuery: unkn
   if (!(await deps.rateLimiter.consume("food_search", max, windowSeconds))) return fail("rate_limited");
 
   const favorites = await favoriteIds(deps, userId);
+  let providers: FoodProvider[];
+  try {
+    providers = deps.providers;
+  } catch (e) {
+    logSourceError("configuración de proveedores", e);
+    providers = [];
+  }
   const [custom, ...perProvider] = await Promise.all([
     deps.customFoods.search(userId, query, 10),
-    ...deps.providers.map((p) =>
-      searchProvider(deps, p, query).catch((e: unknown) => {
-        logProviderError(e);
-        return null;
-      }),
+    ...(providers.length > 0 ? providers : [null]).map((p) =>
+      p
+        ? searchProvider(deps, p, query).catch((e: unknown) => {
+            logSourceError(p.source, e);
+            return null;
+          })
+        : Promise.resolve(null),
     ),
   ]);
 
@@ -187,6 +201,7 @@ export async function searchFoods(deps: FoodDeps, userId: string, rawQuery: unkn
     // Sin proveedores: al menos lo que ya está en la caché.
     external = await deps.catalog.searchByName(query, 20);
   }
+  if (failed > 0 && external.length === 0 && custom.length === 0) return fail("unavailable");
 
   const seen = new Set<string>();
   const foods = [
@@ -210,17 +225,23 @@ export async function lookupBarcode(deps: FoodDeps, userId: string, rawCode: unk
   if (cached && isFresh(cached.fetchedAt, FOOD_TTL_MS, deps.now())) return ok(cachedToView(cached, favorites));
 
   let anyFailed = false;
-  for (const provider of deps.providers) {
-    let found: ProviderFood | null = null;
+  let providers: FoodProvider[] = [];
+  try {
+    providers = deps.providers;
+  } catch (e) {
+    logSourceError("configuración de proveedores", e);
+    anyFailed = true;
+  }
+  for (const provider of providers) {
     try {
-      found = await provider.byBarcode(barcode);
+      const found = await provider.byBarcode(barcode);
+      if (found) {
+        const [saved] = await deps.cacheWriter().upsertFoods([found]);
+        if (saved) return ok(cachedToView(saved, favorites));
+      }
     } catch (e) {
-      logProviderError(e);
+      logSourceError(provider.source, e);
       anyFailed = true;
-    }
-    if (found) {
-      const [saved] = await deps.cacheWriter().upsertFoods([found]);
-      if (saved) return ok(cachedToView(saved, favorites));
     }
   }
   if (cached) return ok(cachedToView(cached, favorites)); // viejo pero mejor que nada

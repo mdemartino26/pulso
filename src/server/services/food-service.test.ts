@@ -151,6 +151,25 @@ describe("búsqueda", () => {
     expect(r.ok && r.value.foods).toHaveLength(1);
   });
 
+  it("si un proveedor o la caché fallan por otra causa, sigue con el resto", async () => {
+    const usda = provider({ source: "usda", search: async () => Promise.reject(new Error("boom")) });
+    const { deps } = fakeDeps({ providers: [provider(), usda] });
+    const r = await searchFoods(deps, ME, "alfajor");
+    expect(r).toMatchObject({ ok: true, value: { partial: true } });
+    expect(r.ok && r.value.foods).toHaveLength(1);
+  });
+
+  it("sin claves configuradas o sin ninguna base disponible → 'unavailable', no un error 500", async () => {
+    const { deps } = fakeDeps();
+    Object.defineProperty(deps, "providers", {
+      get() {
+        throw new Error("Variables de entorno del servidor inválidas o faltantes: SUPABASE_SECRET_KEY");
+      },
+    });
+    expect(await searchFoods(deps, ME, "huevo")).toMatchObject({ ok: false, code: "unavailable" });
+    expect(await lookupBarcode(deps, ME, "7790000000001")).toMatchObject({ ok: false, code: "unavailable" });
+  });
+
   it("muestra primero mis alimentos y nunca los de otra persona", async () => {
     const { deps } = fakeDeps({ providers: [provider()] });
     await createCustomFood(deps, ME, { name: "Alfajor casero", basis: "g", kcal100: "400", protein100: "5", carbs100: "60", fat100: "15" });
