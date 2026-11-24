@@ -157,6 +157,21 @@ describe("recomputeTargets y getProfileOverview", () => {
   });
 });
 
+describe("actividad registrada del día", () => {
+  it("suma ejercicio y pasos extra, sin contar dos veces los de una caminata", async () => {
+    const { deps } = fakeDeps();
+    await saveProfile(deps, USER, validForm, "onboarding");
+    deps.activityLog = async () => ({ entries: [{ kcal: 300, stepsIncluded: 3000 }], steps: 9000 });
+    // 9000 − 3000 de la caminata − 6000 de base (nivel liviano) = 0 pasos extra.
+    expect((await recomputeTargets(deps, USER, "2026-11-24"))?.kcalTarget).toBe(1662);
+    deps.activityLog = async () => ({ entries: [], steps: 12000 });
+    const t = await recomputeTargets(deps, USER, "2026-11-24");
+    expect(t!.kcalTarget).toBeGreaterThan(1362);
+    expect(t!.waterMl).toBe(2450); // pasos solos no cuentan como día de ejercicio
+    expect((await getProfileOverview(deps, USER))?.targets?.kcalTarget).toBe(t!.kcalTarget);
+  });
+});
+
 describe("saveProfile con formulario vacío", () => {
   it("devuelve errores por campo (no explota)", async () => {
     const { deps, state } = fakeDeps();
