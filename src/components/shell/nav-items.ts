@@ -1,4 +1,4 @@
-import { Activity, HeartPulse, LayoutGrid, ListChecks, Scale, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, HeartPulse, LayoutGrid, ListChecks, Scale, TrendingUp, Utensils, type LucideIcon } from "lucide-react";
 
 export interface NavItem {
   href: string;
@@ -13,7 +13,8 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/comidas", label: "Comidas", icon: Utensils, mobile: true },
   { href: "/actividad", label: "Actividad", icon: Activity, mobile: true },
   { href: "/peso", label: "Peso", icon: Scale, mobile: true },
-  { href: "/habitos", label: "Hábitos", icon: ListChecks, mobile: true },
+  { href: "/tendencias", label: "Tendencias", icon: TrendingUp, mobile: true },
+  { href: "/habitos", label: "Hábitos", icon: ListChecks, mobile: false },
   { href: "/bienestar", label: "Sueño y ánimo", icon: HeartPulse, mobile: false },
 ];
 
