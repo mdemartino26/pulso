@@ -35,3 +35,36 @@ Registro de las decisiones de seguridad de Pulso y su porqué. Se suma una secci
 **Cadena de suministro**
 - Dependabot activado por archivo; CI corre `npm audit --omit=dev --audit-level=high` en cada PR.
 - El workflow de CI tiene permisos de solo lectura.
+
+## Etapa 2: base de datos
+
+**Row Level Security en todas las tablas** (`supabase/migrations/20261124150100_rls_y_permisos.sql`)
+- Tablas de usuario: cuatro políticas (ver, crear, editar, borrar) con `user_id = auth.uid()`. `WITH CHECK` impide crear un registro a nombre de otro o "mudar" uno propio a otra cuenta.
+- Se usa `(select auth.uid())` para que Postgres lo calcule una vez por consulta y no por fila.
+- Referencias (`met_activities`, `exercises`, `foods_cache`): solo `SELECT` para usuarios con sesión. No hay políticas de escritura: solo el servidor, con la clave secreta, puede escribir.
+- `food_search_cache` y `rate_limits`: RLS activo y sin políticas, así que nadie accede por la API.
+- Un test verifica que **ninguna** tabla de `public` quede sin RLS.
+
+**GRANT/REVOKE además de RLS (defensa en profundidad)**
+- Supabase da por defecto todos los permisos a `anon` y `authenticated`. La migración los revoca y otorga solo lo necesario. Si algún día una política quedara mal escrita, el permiso de tabla sigue cerrando la puerta.
+- `anon` (visitante sin sesión) no puede leer ninguna tabla.
+- `ALTER DEFAULT PRIVILEGES` hace que las tablas que se creen en el futuro también nazcan cerradas.
+
+**Integridad entre datos de distintos usuarios**
+- Las relaciones entre tablas del mismo usuario usan FK compuestas `(id, user_id)`. Es imposible marcar el hábito de otra persona o registrar una comida con el alimento personalizado de otro, aunque se conozca su id.
+
+**Funciones `SECURITY DEFINER`**
+- Solo dos: `handle_new_user` (crea el perfil al registrarse) y `consume_rate_limit`. Ambas con `search_path = ''` para evitar que se usen objetos homónimos maliciosos, y `consume_rate_limit` solo toca el contador de `auth.uid()`, con buckets y límites acotados.
+- `EXECUTE` revocado de `public` y `anon` en todas las funciones.
+
+**Validación en la base además de Zod**
+- `CHECK` con rangos razonables (peso 25–350 kg, altura 100–250 cm, porciones hasta 5 kg, nutrientes por 100 g físicamente posibles, etc.). También frenan datos corruptos de APIs externas.
+- Piso calórico por sexo (1200/1500 kcal) con trigger en `daily_targets`.
+- Zona horaria validada contra `pg_timezone_names`.
+- `image_url` del caché solo acepta `https://images.openfoodfacts.org/…`, coincidiendo con la CSP.
+
+**Borrado de cuenta**
+- Todas las tablas de usuario tienen `ON DELETE CASCADE` hacia `auth.users`: borrar el usuario borra todo. Hay un test que lo verifica.
+
+**Datos mínimos**
+- Sin nombre, teléfono, foto, notas libres ni campos "por las dudas". El email lo guarda Supabase Auth.
