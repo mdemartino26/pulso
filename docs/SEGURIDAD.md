@@ -108,3 +108,19 @@ Registro de las decisiones de seguridad de Pulso y su porqué. Se suma una secci
 
 **CSRF**
 - Las Server Actions de Next comparan `Origin` con `Host` y rechazan pedidos de otros sitios. Las cookies `SameSite=Lax` suman otra capa.
+
+## Etapa 4: perfil y cálculos
+
+**Límites de salud validados en el servidor**
+- El esquema Zod del perfil (`src/lib/validation/profile.ts`) es el mismo en el formulario y en la Server Action. El formulario avisa antes de enviar, pero el servidor vuelve a calcular y rechaza un ritmo de más del 1 % del peso por semana o una meta por debajo del piso (1200 kcal mujeres, 1500 kcal varones). Además, el trigger `enforce_kcal_floor` de la base lo impide aunque alguien saltee la app.
+- Edad mínima 18 años y aviso de salud obligatorio en el onboarding (embarazo, lactancia, trastornos de la conducta alimentaria, condiciones médicas).
+- Rangos razonables en todos los números (altura 100–250 cm, peso 30–300 kg, agua 500–6000 ml).
+
+**Errores sin detalles internos**
+- Si falla la base, la persona ve "No pudimos guardar tus datos" y el log del servidor guarda solo el código del error (`RepositoryError`), nunca los datos de salud.
+
+**Datos mínimos**
+- El perfil guarda solo lo que usa la fórmula: sexo biológico, fecha de nacimiento, altura, nivel de actividad, zona horaria, objetivo y ritmo. El peso va en `weight_entries` (con fecha) para poder ver la tendencia.
+
+**La UI no depende de Supabase**
+- Las páginas llaman a servicios (`profile-service.ts`) que reciben repositorios por parámetro. Los tests usan repositorios en memoria.
