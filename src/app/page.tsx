@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { ChevronRight, UserRound, Utensils } from "lucide-react";
+import { Activity, ChevronRight, UserRound, Utensils } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { requireCompleteProfile } from "@/server/auth/profile-guard";
 import { foodDeps } from "@/server/services/food-deps";
 import { getDayLog } from "@/server/services/food-service";
+import { activityDeps } from "@/server/services/activity-deps";
+import { getActivityDay } from "@/server/services/activity-service";
 
 /**
  * Inicio provisorio: muestra las metas de hoy. En la Etapa 7 se reemplaza
@@ -13,7 +15,10 @@ import { getDayLog } from "@/server/services/food-service";
 export default async function HomePage() {
   const { user, overview } = await requireCompleteProfile();
   const { targets } = overview;
-  const log = await getDayLog(await foodDeps(user.id), user.id, overview.today);
+  const [log, activity] = await Promise.all([
+    foodDeps(user.id).then((d) => getDayLog(d, user.id, overview.today)),
+    activityDeps(user.id).then((d) => getActivityDay(d, user.id, overview.today)),
+  ]);
   const n = (v: number) => v.toLocaleString("es-AR");
 
   return (
@@ -84,8 +89,28 @@ export default async function HomePage() {
         <ChevronRight aria-hidden className="text-muted-foreground size-5" />
       </Link>
 
+      <Link
+        href="/actividad"
+        className="bg-card hover:bg-accent/50 flex items-center gap-4 rounded-xl border p-4 shadow-xs"
+      >
+        <span className="bg-primary/10 text-primary grid size-10 place-items-center rounded-full">
+          <Activity aria-hidden className="size-5" />
+        </span>
+        <span className="flex-1">
+          <span className="block font-medium">Actividad</span>
+          <span className="text-muted-foreground text-sm">
+            {activity.entries.length > 0
+              ? `${n(activity.minutes)} min · ${n(activity.exerciseKcal)} kcal de ejercicio`
+              : activity.steps
+                ? `${n(activity.steps)} pasos hoy`
+                : "Sumá tu entrenamiento o tus pasos"}
+          </span>
+        </span>
+        <ChevronRight aria-hidden className="text-muted-foreground size-4" />
+      </Link>
+
       <p className="text-muted-foreground text-sm">
-        Muy pronto vas a poder registrar actividad, agua y hábitos desde acá.
+        Muy pronto vas a poder registrar agua, peso y hábitos desde acá.
       </p>
     </main>
   );

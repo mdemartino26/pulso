@@ -11,4 +11,5 @@ export * from "./energy";
 export * from "./goals";
 export * from "./nutrition";
 export * from "./trend";
+export * from "./activity";
 export * from "./types";

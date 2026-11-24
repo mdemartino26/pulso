@@ -154,3 +154,18 @@ Registro de las decisiones de seguridad de Pulso y su porqué. Se suma una secci
 
 **Cámara**
 - `Permissions-Policy: camera=(self)`. La cámara se enciende solo con el escáner abierto y se apaga al cerrarlo. El video se lee en el navegador y no se sube a ningún lado. Si no hay cámara o no hay permiso, se puede escribir el código.
+
+## Etapa 6: actividad
+
+**El cliente nunca manda calorías ni MET**
+- El formulario manda qué actividad (id de la tabla `met_activities`), la intensidad, los minutos y, en pesas, las series. El servidor busca el MET en la base, usa el último peso registrado y calcula las calorías y los pasos incluidos. Si alguien agrega `kcal=9999` al envío, se ignora.
+- La vista previa de calorías del formulario es solo orientativa: el número que se guarda es el del servidor.
+
+**Validación en el servidor**
+- Duración de 1 a 600 minutos, intensidad de una lista cerrada, pasos de 0 a 100.000, series de 1 a 200 repeticiones y de 0 a 500 kg, máximo 50 series por actividad. Las fechas van de hoy hasta un año atrás.
+- Las series llegan como JSON en un campo oculto: se limita su tamaño (20.000 caracteres) antes de parsearlo y después pasa por Zod. Solo se aceptan ejercicios que existen y solo en actividades de fuerza.
+- La base repite los mismos límites con `check` y no hace falta ninguna migración nueva: RLS y permisos de `activity_entries`, `strength_sets` y `step_entries` ya estaban desde la Etapa 2.
+
+**Series siempre de la misma persona**
+- `strength_sets` referencia a `(activity_entries.id, user_id)`: aunque alguien adivine el id de una actividad ajena, la base no le deja colgarle series. Además RLS filtra por `user_id = auth.uid()`.
+- Si una actividad ajena se pide por URL, la respuesta es 404 (no se distingue de "no existe").

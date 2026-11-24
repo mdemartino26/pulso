@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   computeDailyTargets,
+  dayActivity,
   isValidTimeZone,
   localDate,
   type DailyTargets,
@@ -21,11 +22,33 @@ import {
  * parámetro (en producción los arma `profile-deps.ts`; en tests, fakes).
  */
 
+export interface DayActivityLog {
+  entries: { kcal: number; stepsIncluded: number }[];
+  steps: number | null;
+}
+
 export interface ProfileDeps {
   profiles: ProfileRepository;
   weights: WeightRepository;
   targets: DailyTargetsRepository;
   now: () => Date;
+  /** Ejercicio y pasos de un día (Etapa 6). Sin esto, se asume un día sin actividad. */
+  activityLog?: (userId: string, date: IsoDate) => Promise<DayActivityLog>;
+}
+
+type CalcProfile = Pick<CompleteProfile, "sex" | "heightCm" | "activityLevel">;
+
+/** Ejercicio y pasos del día, listos para la fórmula. */
+async function activityFor(
+  deps: ProfileDeps,
+  userId: string,
+  date: IsoDate,
+  profile: CalcProfile,
+  weightKg: number,
+): Promise<DayActivity> {
+  if (!deps.activityLog) return {};
+  const log = await deps.activityLog(userId, date);
+  return dayActivity({ ...log, weightKg, heightCm: profile.heightCm, sex: profile.sex, activityLevel: profile.activityLevel });
 }
 
 const DEFAULT_TZ = "America/Argentina/Buenos_Aires";
@@ -76,11 +99,12 @@ export async function saveProfile(
     await deps.weights.upsert(userId, today, input.weightKg);
   }
 
-  await deps.targets.upsert(userId, today, targetsFromInput(input, today));
+  const activity = await activityFor(deps, userId, today, input, input.weightKg);
+  await deps.targets.upsert(userId, today, targetsFromInput(input, today, activity));
   return { ok: true };
 }
 
-function targetsFromInput(input: ProfileInput, date: IsoDate): DailyTargets {
+function targetsFromInput(input: ProfileInput, date: IsoDate, activity: DayActivity): DailyTargets {
   return computeDailyTargets(
     {
       sex: input.sex,
@@ -93,6 +117,7 @@ function targetsFromInput(input: ProfileInput, date: IsoDate): DailyTargets {
     },
     input.weightKg,
     date,
+    activity,
   );
 }
 
@@ -104,13 +129,14 @@ export async function recomputeTargets(
   deps: ProfileDeps,
   userId: string,
   date: IsoDate,
-  activity: DayActivity = {},
+  activity?: DayActivity,
 ): Promise<DailyTargets | null> {
   const profile = await deps.profiles.get(userId);
   if (!isCompleteProfile(profile)) return null;
   const weight = await deps.weights.latestOnOrBefore(userId, date);
   if (!weight) return null;
-  const targets = computeDailyTargets(toCalcProfile(profile), weight.weightKg, date, activity);
+  const dayAct = activity ?? (await activityFor(deps, userId, date, profile, weight.weightKg));
+  const targets = computeDailyTargets(toCalcProfile(profile), weight.weightKg, date, dayAct);
   await deps.targets.upsert(userId, date, targets);
   return targets;
 }
@@ -128,7 +154,12 @@ export async function getProfileOverview(deps: ProfileDeps, userId: string): Pro
   const today = todayFor(deps, profile.timezone);
   const weight = await deps.weights.latestOnOrBefore(userId, today);
   const targets = weight
-    ? computeDailyTargets(toCalcProfile(profile), weight.weightKg, today)
+    ? computeDailyTargets(
+        toCalcProfile(profile),
+        weight.weightKg,
+        today,
+        await activityFor(deps, userId, today, profile, weight.weightKg),
+      )
     : null;
   return { profile, today, weightKg: weight?.weightKg ?? null, targets };
 }

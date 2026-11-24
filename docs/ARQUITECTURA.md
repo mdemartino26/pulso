@@ -72,3 +72,23 @@ Navegador ──► /api/foods/search, /api/foods/barcode/[código]   (Route Han
 - **Caché**: búsquedas 7 días, productos 30 días. Si un proveedor no responde, se busca en la caché.
 - **Unidades**: gramos o mililitros (según el alimento) y "porciones" cuando el producto declara una. Cada entrada guarda `base_per_unit` (cuántos g/ml vale 1 unidad) y los nutrientes cada 100: la base calcula el resto.
 - **Rápido de cargar**: recientes, favoritos, mis alimentos, código de barras y "copiar lo del día anterior".
+
+## Actividad
+
+```
+Server Actions de src/features/activity/actions.ts   (registrar, editar, borrar, pasos)
+        │
+        ▼
+src/server/services/activity-service.ts   (MET, kcal, pasos incluidos, historial de fuerza)
+        │                         │
+        ▼                         ▼
+repositorios (RLS)          profile-service.recomputeTargets
+activity_entries,           (cada cambio recalcula la meta de ese día)
+strength_sets, step_entries,
+met_activities, exercises
+```
+
+- **Calorías**: (MET − 1) × kg × horas, con el MET de la intensidad elegida (suave, moderada, intensa) y el peso registrado más cercano a esa fecha. Se guardan con la entrada, así un día viejo no cambia si después cambia tu peso.
+- **Pasos dentro de una caminata o carrera**: se estiman por cadencia (caminar 90, 105 o 120 pasos por minuto según intensidad; correr, unos 160) y se descuentan de los pasos del día. Así 30 minutos de caminata no se cuentan dos veces.
+- **Meta del día**: el servicio de perfil recibe `activityLog`, que trae el ejercicio y los pasos de esa fecha. La meta de hoy en el inicio y las metas guardadas en `daily_targets` ya incluyen la actividad.
+- **Fuerza**: cada serie guarda ejercicio, repeticiones y peso. El historial agrupa por sesión y muestra la mejor serie, el volumen (reps × kg) y el 1RM estimado con Epley, que sirve para comparar sesiones, no como récord real.

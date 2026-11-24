@@ -14,6 +14,8 @@ export type TargetSource = "formula" | "adaptive";
 export type FoodSourceDb = "usda" | "off" | "custom";
 export type NutrientBasisDb = "g" | "ml";
 export type ServingUnitDb = "g" | "ml" | "unit" | "serving";
+export type IntensityDb = "low" | "moderate" | "high";
+export type ActivityCategoryDb = "gym" | "cardio" | "sport" | "daily";
 export type MealTypeDb = "breakfast" | "lunch" | "afternoon_snack" | "dinner" | "snack";
 
 /** Columnas de nutrientes cada 100 (comunes a varias tablas). */
@@ -224,6 +226,89 @@ export interface Database {
         Update: { [_ in never]: never };
         Relationships: [];
       };
+      met_activities: {
+        Row: {
+          id: number;
+          slug: string;
+          name_es: string;
+          category: ActivityCategoryDb;
+          met_low: number;
+          met_moderate: number;
+          met_high: number;
+          is_ambulatory: boolean;
+        };
+        Insert: { [_ in never]: never };
+        Update: { [_ in never]: never };
+        Relationships: [];
+      };
+      exercises: {
+        Row: { id: number; slug: string; name_es: string; muscle_group: string };
+        Insert: { [_ in never]: never };
+        Update: { [_ in never]: never };
+        Relationships: [];
+      };
+      activity_entries: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          met_activity_id: number;
+          intensity: IntensityDb;
+          duration_min: number;
+          met_value: number;
+          kcal: number;
+          steps_included: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id?: string;
+          date: string;
+          met_activity_id: number;
+          intensity: IntensityDb;
+          duration_min: number;
+          met_value: number;
+          kcal: number;
+          steps_included?: number;
+        };
+        Update: {
+          met_activity_id?: number;
+          intensity?: IntensityDb;
+          duration_min?: number;
+          met_value?: number;
+          kcal?: number;
+          steps_included?: number;
+        };
+        Relationships: [];
+      };
+      strength_sets: {
+        Row: {
+          id: string;
+          user_id: string;
+          activity_entry_id: string;
+          exercise_id: number;
+          set_number: number;
+          reps: number;
+          weight_kg: number;
+          created_at: string;
+        };
+        Insert: {
+          user_id?: string;
+          activity_entry_id: string;
+          exercise_id: number;
+          set_number: number;
+          reps: number;
+          weight_kg?: number;
+        };
+        Update: { [_ in never]: never };
+        Relationships: [];
+      };
+      step_entries: {
+        Row: { id: string; user_id: string; date: string; steps: number; created_at: string; updated_at: string };
+        Insert: { user_id?: string; date: string; steps: number };
+        Update: { steps?: number };
+        Relationships: [];
+      };
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -241,6 +326,8 @@ export interface Database {
       nutrient_basis: NutrientBasisDb;
       serving_unit: ServingUnitDb;
       meal_type: MealTypeDb;
+      intensity: IntensityDb;
+      activity_category: ActivityCategoryDb;
     };
     CompositeTypes: { [_ in never]: never };
   };
