@@ -1,36 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pulso
 
-## Getting Started
+**Pulso** es una app web para acompañar tu estilo de vida día a día. Registrás tus comidas, tu actividad, tu peso, el agua que tomás y tus hábitos, y ves tu balance del día y cómo vas en el tiempo.
 
-First, run the development server:
+Está pensada para ayudar a sostener un déficit calórico **de forma saludable**: con metas que respetan límites seguros, un tono positivo y sin culpa, y tendencias por encima de los días sueltos.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Qué vas a poder hacer
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **Comidas:** buscar alimentos genéricos y productos envasados de Argentina, o escanear el código de barras.
+- **Actividad:** cargar gimnasio, deportes y pasos, y ver cómo progresás en fuerza.
+- **Peso:** registrar tu peso y ver la tendencia semanal, que importa más que el número de un día.
+- **Agua, sueño, ánimo y hábitos:** cargarlos rápido, con rachas que no te castigan por un día malo.
+- **Panel del día y tendencias:** ver tu meta, lo consumido, lo quemado y tu evolución semanal y mensual.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Se instala en el celular como una app (PWA) y tiene modo claro y oscuro.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Privacidad
 
-## Learn More
+Tus datos de salud son tuyos. Cada usuario solo puede ver sus propios registros, y podés exportar o borrar toda tu información cuando quieras.
 
-To learn more about Next.js, take a look at the following resources:
+## Estado
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+En desarrollo (MVP).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Hecha con Next.js, Supabase y Tailwind CSS. La documentación técnica está en [`docs/`](./docs).

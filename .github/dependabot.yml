@@ -1,0 +1,20 @@
+# Dependabot: PRs semanales con actualizaciones de dependencias.
+# Las alertas y los PRs de seguridad se activan en GitHub:
+# Settings > Code security > Dependabot alerts / Dependabot security updates.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Argentina/Buenos_Aires
+    open-pull-requests-limit: 5
+    groups:
+      # Agrupa las actualizaciones menores para no llenar de PRs.
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
