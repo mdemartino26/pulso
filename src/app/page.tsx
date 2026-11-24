@@ -1,22 +1,28 @@
 import { ThemeToggle } from "@/components/theme-toggle";
+import { SignOutButton } from "@/features/auth/components/sign-out-button";
+import { requireUser } from "@/server/auth/session";
 
 /**
- * Pantalla provisoria de la Etapa 1. En la Etapa 7 se reemplaza por el
- * panel del día (y en la Etapa 3 pasa a ser una ruta privada).
+ * Pantalla provisoria. En la Etapa 4 se suma el onboarding y en la 7 se
+ * reemplaza por el panel del día.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  await requireUser();
+
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 pt-[max(1.5rem,env(safe-area-inset-top))] pb-8">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Pulso</h1>
-        <ThemeToggle />
+        <div className="flex items-center gap-1">
+          <SignOutButton />
+          <ThemeToggle />
+        </div>
       </header>
 
-      <section className="rounded-xl border bg-card p-5 text-card-foreground shadow-xs">
-        <h2 className="text-lg font-medium">¡Hola!</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          La base de la app está lista: PWA instalable, modo claro y oscuro y headers de
-          seguridad. En las próximas etapas llegan la base de datos, el login y los registros.
+      <section className="bg-card text-card-foreground rounded-xl border p-5 shadow-xs">
+        <h2 className="text-lg font-medium">¡Ya estás adentro!</h2>
+        <p className="text-muted-foreground mt-2 text-sm">
+          Tu sesión está iniciada. En la próxima etapa armamos tu perfil y tus metas.
         </p>
       </section>
     </main>
