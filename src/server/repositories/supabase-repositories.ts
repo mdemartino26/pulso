@@ -55,8 +55,11 @@ export function createProfileRepository(db: ServerSupabaseClient): ProfileReposi
       if (patch.waterGoalOverrideMl !== undefined) row.water_goal_ml_override = patch.waterGoalOverrideMl;
       if (patch.onboardingCompletedAt !== undefined) row.onboarding_completed_at = patch.onboardingCompletedAt;
 
-      const { error } = await db.from("profiles").update(row).eq("id", userId);
+      const { data, error } = await db.from("profiles").update(row).eq("id", userId).select("id");
       if (error) throw new RepositoryError("profiles.update", error);
+      // Sin fila de perfil (p. ej., cuenta creada antes de aplicar las
+      // migraciones) el UPDATE no falla pero no guarda nada: lo hacemos visible.
+      if (data.length === 0) throw new RepositoryError("profiles.update", { code: "profile_row_missing" });
     },
   };
 }
