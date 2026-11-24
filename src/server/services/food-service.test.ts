@@ -271,3 +271,18 @@ describe("registro de comidas", () => {
     expect(recent[0]?.favorite).toBe(true);
   });
 });
+
+describe("caché de búsquedas", () => {
+  it("si la caché de búsquedas falla, se busca igual", async () => {
+    const { deps } = fakeDeps({ providers: [provider()] });
+    const base = deps.cacheWriter();
+    deps.cacheWriter = () => ({
+      ...base,
+      getSearch: async () => Promise.reject(new Error("42501")),
+      saveSearch: async () => Promise.reject(new Error("42501")),
+    });
+    const r = await searchFoods(deps, ME, "alfajor");
+    expect(r).toMatchObject({ ok: true, value: { partial: false } });
+    expect(r.ok && r.value.foods).toHaveLength(1);
+  });
+});

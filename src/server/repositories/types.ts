@@ -81,7 +81,13 @@ export class RepositoryError extends Error {
   constructor(operation: string, cause?: { code?: string; message?: string }) {
     super(`No se pudo completar la operación de datos (${operation})`);
     this.name = "RepositoryError";
-    const hint = process.env.NODE_ENV === "development" && cause?.code ? DEV_HINTS[cause.code] : undefined;
+    const cacheTable = operation.startsWith("foods_cache") || operation.startsWith("food_search_cache");
+    const hint =
+      process.env.NODE_ENV === "development" && cause?.code
+        ? cacheTable && cause.code === "42501"
+          ? "La clave secreta no tiene permiso sobre la caché: aplicá la migración 20261124190000_permisos_cache_servidor.sql y revisá que SUPABASE_SECRET_KEY empiece con sb_secret_."
+          : DEV_HINTS[cause.code]
+        : undefined;
     console.error(`[repo] ${operation} falló`, { code: cause?.code }, hint ? `\n→ ${hint}` : "");
   }
 }

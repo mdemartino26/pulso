@@ -151,13 +151,20 @@ const isFresh = (iso: string, ttl: number, now: Date) => now.getTime() - new Dat
 async function searchProvider(deps: FoodDeps, provider: FoodProvider, query: string): Promise<CachedFood[]> {
   const qn = normalizeQuery(query);
   const writer = deps.cacheWriter();
-  const cached = await writer.getSearch(provider.source, qn);
+  // La caché de búsquedas es una optimización: si falla, seguimos sin ella.
+  const cached = await writer.getSearch(provider.source, qn).catch((e: unknown) => {
+    logSourceError("caché de búsquedas (leer)", e);
+    return null;
+  });
   if (cached && isFresh(cached.fetchedAt, SEARCH_TTL_MS, deps.now())) {
     return deps.catalog.getMany(cached.foodIds);
   }
   const found = await provider.search(query);
+  // Guardar los alimentos SÍ es necesario: el id de la caché es lo que se registra.
   const saved = await writer.upsertFoods(found.slice(0, 50));
-  await writer.saveSearch(provider.source, qn, saved.map((f) => f.id));
+  await writer.saveSearch(provider.source, qn, saved.map((f) => f.id)).catch((e: unknown) => {
+    logSourceError("caché de búsquedas (guardar)", e);
+  });
   return saved;
 }
 

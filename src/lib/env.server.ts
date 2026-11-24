@@ -11,7 +11,13 @@ const serverEnvSchema = z.object({
   USDA_API_KEY: z.string().min(10).optional(),
   // Clave secreta de Supabase (la antigua service_role). Saltea RLS.
   // Se usa ÚNICAMENTE en src/server/supabase/admin.ts (Etapa 5 y 9).
-  SUPABASE_SECRET_KEY: z.string().min(20),
+  SUPABASE_SECRET_KEY: z
+    .string()
+    .min(20)
+    // Error común: pegar la publishable en lugar de la secreta.
+    .refine((k) => !k.startsWith("sb_publishable_"), {
+      error: "SUPABASE_SECRET_KEY tiene la clave publishable: usá la que empieza con sb_secret_",
+    }),
   // Opcionales: solo para apuntar a un servidor de prueba en tests.
   USDA_API_BASE_URL: z.url().optional(),
   OFF_API_BASE_URL: z.url().optional(),
@@ -32,7 +38,10 @@ export function getServerEnv(): ServerEnv {
     OFF_SEARCH_BASE_URL: process.env.OFF_SEARCH_BASE_URL || undefined,
   });
   if (!parsed.success) {
-    const missing = parsed.error.issues.map((i) => i.path.join(".")).join(", ");
+    // Solo nombres de variables y nuestros mensajes: nunca los valores.
+    const missing = parsed.error.issues
+      .map((i) => (i.code === "custom" ? i.message : i.path.join(".")))
+      .join(", ");
     throw new Error(`Variables de entorno del servidor inválidas o faltantes: ${missing}`);
   }
   cached = parsed.data;
