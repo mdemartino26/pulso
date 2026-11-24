@@ -30,3 +30,24 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: https://ejemplo.supabase.co
           NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ejemplo_para_ci
           NEXT_PUBLIC_SITE_URL: http://localhost:3000
+
+  database:
+    # Aplica las migraciones en un Postgres limpio y corre los tests de RLS.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v6
+      - run: scripts/test-db.sh
+        env:
+          DATABASE_URL: postgres://postgres@localhost:5432/postgres
