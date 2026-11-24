@@ -8,7 +8,7 @@ const eslintConfig = defineConfig([
   // La clave secreta de Supabase solo puede usarse desde estos archivos.
   {
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/server/repositories/food-cache-writer.ts"],
+    ignores: ["src/server/repositories/food-cache-writer.ts", "src/server/account/delete-account.ts"],
     rules: {
       "no-restricted-imports": [
         "error",

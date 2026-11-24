@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SignOutButton } from "@/features/auth/components/sign-out-button";
@@ -44,7 +44,14 @@ export default async function ProfilePage() {
           waterGoalOverrideMl: profile.waterGoalOverrideMl != null ? String(profile.waterGoalOverrideMl) : "",
         }}
       />
-      <footer className="border-t pt-6">
+      <footer className="grid gap-4 border-t pt-6">
+        <Link href="/perfil/datos" className="hover:bg-accent/60 flex items-center justify-between rounded-2xl border px-4 py-3 text-sm">
+          <span>
+            <span className="block font-medium">Tus datos</span>
+            <span className="text-muted-foreground">Descargarlos o borrar la cuenta</span>
+          </span>
+          <ChevronRight aria-hidden className="text-muted-foreground size-4" />
+        </Link>
         <SignOutButton />
       </footer>
     </main>
