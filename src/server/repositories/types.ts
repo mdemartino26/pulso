@@ -66,10 +66,22 @@ export interface DailyTargetsRepository {
 }
 
 /** Error de acceso a datos. El mensaje es genérico; el detalle va solo al log. */
+/** Pistas solo en desarrollo, para los errores de configuración más comunes. */
+const DEV_HINTS: Record<string, string> = {
+  PGRST205:
+    "La tabla no existe en tu Supabase: aplicá las migraciones de supabase/migrations (ver el doc \"cómo correr la app\").",
+  PGRST202: "Falta una función de la base: aplicá las migraciones de supabase/migrations.",
+  "42P01": "La tabla no existe: aplicá las migraciones de supabase/migrations.",
+  "42501": "Permiso denegado: revisá que se haya aplicado la migración de RLS y permisos.",
+  profile_row_missing:
+    "Tu usuario no tiene fila en profiles (se creó antes de aplicar las migraciones). Ver \"Problemas comunes\" en el doc.",
+};
+
 export class RepositoryError extends Error {
   constructor(operation: string, cause?: { code?: string; message?: string }) {
     super(`No se pudo completar la operación de datos (${operation})`);
     this.name = "RepositoryError";
-    console.error(`[repo] ${operation} falló`, { code: cause?.code });
+    const hint = process.env.NODE_ENV === "development" && cause?.code ? DEV_HINTS[cause.code] : undefined;
+    console.error(`[repo] ${operation} falló`, { code: cause?.code }, hint ? `\n→ ${hint}` : "");
   }
 }
