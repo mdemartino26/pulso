@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildCsp, generateNonce, safeOrigin } from "./csp";
+import { buildCsp, generateNonce } from "./csp";
 
 function directive(csp: string, name: string): string | undefined {
   return csp
@@ -18,11 +18,7 @@ describe("generateNonce", () => {
 });
 
 describe("buildCsp en producción", () => {
-  const csp = buildCsp({
-    nonce: "abc123",
-    isDev: false,
-    supabaseUrl: "https://proyecto.supabase.co",
-  });
+  const csp = buildCsp({ nonce: "abc123", isDev: false });
 
   it("solo permite scripts con nonce y strict-dynamic, sin eval ni inline", () => {
     const scripts = directive(csp, "script-src");
@@ -41,10 +37,8 @@ describe("buildCsp en producción", () => {
     expect(directive(csp, "manifest-src")).toBe("manifest-src 'self'");
   });
 
-  it("connect-src solo incluye la app y Supabase (https y wss)", () => {
-    expect(directive(csp, "connect-src")).toBe(
-      "connect-src 'self' https://proyecto.supabase.co wss://proyecto.supabase.co",
-    );
+  it("connect-src solo permite la propia app (Supabase se usa desde el servidor)", () => {
+    expect(directive(csp, "connect-src")).toBe("connect-src 'self'");
   });
 
   it("permite imágenes de Open Food Facts", () => {
@@ -60,37 +54,10 @@ describe("buildCsp en producción", () => {
 });
 
 describe("buildCsp en desarrollo", () => {
-  const csp = buildCsp({ nonce: "n", isDev: true, supabaseUrl: undefined });
+  const csp = buildCsp({ nonce: "n", isDev: true });
 
   it("agrega unsafe-eval solo en dev y no fuerza https", () => {
     expect(directive(csp, "script-src")).toContain("'unsafe-eval'");
     expect(csp).not.toContain("upgrade-insecure-requests");
-  });
-
-  it("sin URL de Supabase, connect-src queda en 'self'", () => {
-    expect(directive(csp, "connect-src")).toBe("connect-src 'self'");
-  });
-});
-
-describe("safeOrigin", () => {
-  it("rechaza URLs inválidas o sin https", () => {
-    expect(safeOrigin("no es una url")).toBeNull();
-    expect(safeOrigin("http://proyecto.supabase.co")).toBeNull();
-    expect(safeOrigin("javascript:alert(1)")).toBeNull();
-  });
-
-  it("acepta https y http solo en localhost (Supabase local)", () => {
-    expect(safeOrigin("https://x.supabase.co")?.origin).toBe("https://x.supabase.co");
-    expect(safeOrigin("http://127.0.0.1:54321")?.origin).toBe("http://127.0.0.1:54321");
-  });
-
-  it("no permite inyectar directivas extra en la CSP", () => {
-    const csp = buildCsp({
-      nonce: "n",
-      isDev: false,
-      supabaseUrl: "https://x.supabase.co; script-src *",
-    });
-    expect(directive(csp, "connect-src")).not.toContain("script-src");
-    expect(csp.match(/script-src /g)).toHaveLength(1);
   });
 });

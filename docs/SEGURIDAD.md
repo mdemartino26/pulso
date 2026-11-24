@@ -68,3 +68,43 @@ Registro de las decisiones de seguridad de Pulso y su porqué. Se suma una secci
 
 **Datos mínimos**
 - Sin nombre, teléfono, foto, notas libres ni campos "por las dudas". El email lo guarda Supabase Auth.
+
+## Etapa 3: autenticación
+
+**Sesión solo en el servidor, con cookies httpOnly** (`src/server/supabase/cookie-options.ts`)
+- El navegador nunca habla con Supabase: login, datos y refresco pasan por Server Actions, Route Handlers y el proxy. Eso permite marcar las cookies de sesión como `httpOnly` (JavaScript no las puede leer, así que un XSS no puede robar la sesión), `Secure` en producción y `SameSite=Lax`.
+- Por lo mismo, la CSP quedó con `connect-src 'self'`: el navegador no puede mandar datos a ningún otro dominio.
+
+**Verificación de identidad**
+- Siempre `getClaims()`, que valida la firma del JWT. Nunca `getSession()` para decidir permisos: lee la cookie sin verificarla.
+- `proxy.ts` refresca el token vencido y redirige, pero **no es la única barrera**: cada página privada llama a `requireUser()` y la base aplica RLS. Si el proxy se salteara (como en la vulnerabilidad CVE-2025-29927 de Next), los datos siguen protegidos.
+- Las respuestas que escriben cookies de sesión llevan `Cache-Control: private, no-store` para que ningún CDN las guarde.
+
+**Rutas privadas por defecto** (`src/lib/auth/routes.ts`)
+- Hay una lista cerrada de rutas públicas (login, registro, recuperar, `/auth/*`). Cualquier ruta nueva nace privada.
+
+**Sin "open redirect"** (`src/lib/auth/redirect.ts`)
+- El parámetro `next` solo acepta rutas internas. `//malo.com`, `https://…`, `/\malo.com` y caracteres de control vuelven a `/`. Tiene tests.
+
+**No revelar quién tiene cuenta**
+- Registro y "olvidé mi contraseña" responden lo mismo exista o no el email.
+- Login fallido: "el email o la contraseña no coinciden", sin decir cuál.
+
+**Errores sin detalles internos**
+- Los errores de Supabase se traducen a códigos propios y a textos fijos en español (`src/features/auth/messages.ts`). Por URL solo se aceptan códigos de una lista cerrada: nunca se muestra texto que venga en la URL.
+- Los logs del servidor registran solo el código y el status del error: nunca emails, contraseñas ni tokens.
+- `error.tsx` muestra un mensaje genérico, sin stack ni mensaje del error.
+
+**Google OAuth con PKCE**
+- El "code verifier" queda en una cookie httpOnly: el código que devuelve Google solo sirve en el navegador que empezó el login.
+- El login con Google arranca con un link (`GET /auth/google`) y no con un formulario, para no tener que abrir `form-action` de la CSP a Google.
+
+**Links de mail con `token_hash`** (`/auth/confirm`)
+- Funcionan aunque el mail se abra en otro dispositivo. Solo se aceptan los tipos `email`, `signup`, `recovery` y `email_change`.
+
+**Contraseñas**
+- Mínimo 10 caracteres, con letras y números; máximo 72 (el límite real de bcrypt). Se valida con Zod en el cliente y en el servidor, y conviene configurar el mismo mínimo en Supabase.
+- Cerrar sesión es un POST (formulario), no un link: no se puede disparar desde otro sitio con una imagen o un link.
+
+**CSRF**
+- Las Server Actions de Next comparan `Origin` con `Host` y rechazan pedidos de otros sitios. Las cookies `SameSite=Lax` suman otra capa.
